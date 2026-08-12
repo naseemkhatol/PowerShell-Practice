@@ -27,7 +27,7 @@ else
 $PowerShellVersion = $PSVersionTable.PSVersion
 Write-Host "PowerShell Version: $PowerShellVersion"
 
-If ($PowerShellVersion.Major -ge 5.0)
+If ($PowerShellVersion.Major -ge 5)
 {
     Write-Host "Supported: Yes"
     $ChecksPassed++
@@ -57,7 +57,7 @@ else
 $Disk= Get-Volume | Where DriveLetter -eq "C"
 
 Write-Host "Free Disk Space: $("{0:N2}" -f ($Disk.SizeRemaining/1GB)) GB"
-Write-Host "Requirement : 20 GB"
+Write-Host "Requirement: 20 GB"
 
 If ($Disk.SizeRemaining -ge 20GB)
 {
@@ -71,7 +71,7 @@ else
 " "
 
 Write-Host "Checking Internet Connection..."
-$Connected= Test-Connection LAPTOP-8D7GT33G
+$Connected = Test-Connection 8.8.8.8 -Count 1 -Quiet
 If ($Connected)
 {
     Write-Host "Connected: Yes"
@@ -106,7 +106,7 @@ Write-Host "Checking for Required Applications..."
 
 ForEach ($App in $Applications)
 {
-    $AppInstalled = Get-Package | Where Name -Like $App
+    $AppInstalled = Get-Package | Where Name -Like "*$App*"
     If ($AppInstalled)
     {
         Write-Host "$App Installed: Yes"
