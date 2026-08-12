@@ -138,7 +138,7 @@ $Applications = @(
 
 ForEach ($App in $Applications)
 {
-    $Installed= Get-Package | Where-Object Name -eq $App
+    $Installed= Get-Package | Where-Object Name -like "*$App*"
 If ($Installed)
 {Write-Host "$App is installed"}
 Else
