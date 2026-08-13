@@ -1,3 +1,29 @@
+<#
+===============================================================================
+                           INTUNE READINESS CHECKER
+===============================================================================
+
+.SYNOPSIS
+    Performs a readiness assessment for Microsoft Intune application deployment.
+
+.DESCRIPTION
+    Collects and evaluates key system information to determine whether a
+    Windows device meets basic deployment requirements.
+    
+.AUTHOR
+    Naseem Khatol
+
+.CREATED
+    August 2026
+
+.NOTES
+    This project was created for learning purposes to develop PowerShell
+    scripting skills related to Windows administration, Microsoft Intune,
+    and application deployment workflows.
+
+===============================================================================
+#>
+
 Write-Host "=========================================="
 Write-Host "      INTUNE READINESS CHECK"
 Write-Host "=========================================="
