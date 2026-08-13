@@ -1,3 +1,22 @@
+<#
+.SYNOPSIS
+    Performs a PC health assessment.
+
+.DESCRIPTION
+    Collects information about the local computer, including:
+      - System Information
+      - Memory Health
+      - Disk Health
+      - Service Health
+      - Process Health
+
+.AUTHOR
+    Naseem Khatol
+
+.DATE
+    August 2026
+#>
+
 # ==========================================
 # PowerShell PC Health Checker
 # ==========================================
