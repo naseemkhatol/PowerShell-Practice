@@ -1,4 +1,3 @@
-
 Function Get-ComputerName {
     Write-Host "Computer Name: $env:ComputerName"
 }
@@ -65,3 +64,21 @@ Function Get-MemoryHealth {
 }
 $MemStatus =Get-MemoryHealth
 $MemStatus | fl
+
+Write-Host "===== PC Health Report ====="
+
+Function Get-PCHealthReport {
+    $DiskHealth = Get-DiskHealth -DriveLetter "C"
+    $MemoryHealth = Get-MemoryHealth
+    $PCHealthReport = [PSCustomObject]@{
+        ComputerName = $env:ComputerName
+        DiskStatus = $DiskHealth.DiskStatus
+        DiskFreeSpace = $DiskHealth.FreeSpace
+        MemoryStatus = $MemoryHealth.MemoryStatus
+        MemoryUsage = $MemoryHealth.UsedMemoryPercentage
+    }   
+    return $PCHealthReport
+}
+
+$PCHealthReport = Get-PCHealthReport
+$PCHealthReport | fl
