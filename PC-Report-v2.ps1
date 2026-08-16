@@ -26,9 +26,9 @@ Function Get-DiskHealth {
 
         $DiskReport = [PSCustomObject]@{
         DriveLetter= $driveLetter
-        TotalSizeGB = $("{0:N2}" -f ($Drive.Size / 1GB))
-        FreeSpaceGB = $("{0:N2}" -f ($Drive.SizeRemaining / 1GB))
-        FreeSpacePercentage = $("{0:P2}" -f ($FreeSpacePercentage))
+        TotalSizeGB = $Drive.Size / 1GB
+        FreeSpaceGB = $Drive.SizeRemaining / 1GB
+        FreeSpacePercentage = $FreeSpacePercentage
         DiskStatus = $DiskStatus
         }
     
@@ -50,7 +50,11 @@ ForEach ($Drive in $DriveLetters) {
         $DiskReport += $Status
     }
 }
-$DiskReport | ft
+$DiskReport | select-object DriveLetter,
+    @{Name="TotalSizeGB"; Expression={"{0:N2}" -f ($_.TotalSizeGB)}},
+    @{Name="FreeSpaceGB"; Expression={"{0:N2}" -f ($_.FreeSpaceGB)}},
+    @{Name="FreeSpacePercentage"; Expression={"{0:P2}" -f ($_.FreeSpacePercentage)}},
+    DiskStatus
 
 Write-Host "===================== Memory Health Report ======================"
 Function Get-MemoryHealth {
@@ -71,16 +75,20 @@ Function Get-MemoryHealth {
     }
     
     $MemoryReport = [PSCustomObject]@{
-        TotalMemoryGB = "{0:N2}" -f $TotalMemoryGB
-        FreeMemoryGB = "{0:N2}" -f $FreeMemoryGB
-        UsedMemoryGB = "{0:N2}" -f $UsedMemoryGB
-        UsedMemoryPercentage = "{0:P2}" -f $UsedMemoryPercentage
+        TotalMemoryGB = $TotalMemoryGB
+        FreeMemoryGB = $FreeMemoryGB
+        UsedMemoryGB = $UsedMemoryGB
+        UsedMemoryPercentage = $UsedMemoryPercentage
         MemoryStatus = $MemoryStatus
     }
     return $MemoryReport
 }
 $MemStatus =Get-MemoryHealth
-$MemStatus | fl
+$MemStatus | select-object @{Name="TotalMemoryGB"; Expression={"{0:N2}" -f ($_.TotalMemoryGB)}},
+    @{Name="FreeMemoryGB"; Expression={"{0:N2}" -f ($_.FreeMemoryGB)}},
+    @{Name="UsedMemoryGB"; Expression={"{0:N2}" -f ($_.UsedMemoryGB)}},
+    @{Name="UsedMemoryPercentage"; Expression={"{0:P2}" -f ($_.UsedMemoryPercentage)}},
+    MemoryStatus
 
 Write-Host "===================== PC Health Report ======================"
 
@@ -99,7 +107,7 @@ Function Get-PCHealthReport
             DiskStatus = $DiskHealth.DiskStatus
             DiskFreeSpaceGB = $DiskHealth.FreeSpaceGB
             MemoryStatus = $MemoryHealth.MemoryStatus
-            MemoryUsageercentage = $MemoryHealth.UsedMemoryPercentage
+            MemoryUsagePercentage = $MemoryHealth.UsedMemoryPercentage
         }   
         return $PCHealthReport
     }
@@ -119,5 +127,6 @@ ForEach ($Drive in $DriveLetters) {
         $PCHealthReports += $Report
     }
 }
-$PCHealthReports | ft
-
+$PCHealthReports | select-object ComputerName, DiskLetter, DiskStatus, 
+@{Name="DiskFreeSpaceGB"; Expression={"{0:N2}" -f ($_.DiskFreeSpaceGB)}}, MemoryStatus, 
+@{Name="MemoryUsagePercentage"; Expression={"{0:P2}" -f ($_.MemoryUsagePercentage)}} | ft -AutoSize | Out-Host
