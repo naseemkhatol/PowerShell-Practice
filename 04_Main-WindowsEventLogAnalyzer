@@ -1,1 +1,38 @@
+Import-Module "$PSScriptRoot\EventTools.ps1"
 
+"================================= Get Events ====================================="
+
+" "
+$Events = Get-SystemEvents -MaxEvents 20
+
+$Events | 
+    Select-Object TimeCreated, Id, LevelDisplayName, ProviderName | Format-Table
+
+
+"==================================== Get Errors ==================================="
+
+" "
+$Errors= Get-EventsBySeverity -Severity "Error" -MaxEvents 10
+
+$Errors |  
+    Select-Object TimeCreated, Id , ProviderName | Format-Table
+
+
+"================================== Get Event Id ===================================="
+" "
+
+$Shutdowns = Get-EventId -EventID 41 -MaxEvents 500
+
+$Shutdowns | 
+    Select-Object TimeCreated, Id, ProviderName, Message | Format-Table
+
+"================================== Get Recent Events ===================================="
+
+Get-RecentEvents -hours 24 -MaxEvents 500 |
+    Select-Object TimeCreated, Id, LevelDisplayName, ProviderName | Format-Table
+
+"================================= Event Summary ========================================="
+
+$Summary = Get-EventSummary -maxevents 500
+
+$Summary | Format-List
