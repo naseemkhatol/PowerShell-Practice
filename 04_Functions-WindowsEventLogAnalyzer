@@ -1,0 +1,117 @@
+Function Get-SystemEvents {
+    Param(
+        [Parameter(Mandatory=$true)]
+    [Int]$MaxEvents
+        )
+try {
+    $Events = Get-WinEvent -LogName system -MaxEvents $MaxEvents -ErrorAction Stop
+    return $Events
+}
+catch {
+    Write-Host "Unable to retrieve system logs"
+    Write-Host $_.Exception.Message
+    Return
+}
+}
+
+Function Get-EventsBySeverity {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [ValidateSet("Information", "Warning", "Error", "Critical")]
+        [String]$Severity,
+ 
+        [Parameter(Mandatory=$true)]
+        [int]$MaxEvents
+    )
+
+    try {
+        Get-SystemEvents -MaxEvents $MaxEvents |
+            Where-Object LevelDisplayName -eq $Severity
+    }
+    catch {
+        Write-Host "Unable to retrieve $($Severity) Events"
+    }
+}
+
+function Get-EventId {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int]$EventID,
+
+        [Parameter(Mandatory=$true)]
+        [String]$MaxEvents
+    )
+    
+    try {
+        Get-SystemEvents -MaxEvents $MaxEvents | 
+            Where-Object id -eq $EventID
+    }
+    catch {
+        Write-Host "Unable to retrieve Event Id $EventID"
+    }
+}
+
+Function Get-RecentEvents {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int]$hours,
+
+        [Parameter(Mandatory=$true)]
+        [int]$MaxEvents
+    )
+
+    try {
+        $Cutoff = (Get-Date).AddHours(-$hours)
+
+        Get-SystemEvents -MaxEvents $MaxEvents |
+            Where-Object TimeCreated -GE $Cutoff
+    }
+
+    catch {
+        Write-Host "Unable to retrieve recent events."
+        Write-Host  $_.Exception.message
+    }
+}
+
+Function Get-EventSummary {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [int]$MaxEvents
+    )
+    Try {
+        $Events = Get-SystemEvents -MaxEvents $MaxEvents
+
+        $Information = ( $Events | Where-Object LevelDisplayName -eq "Information").count
+
+        $Warnings = ($Events | Where-Object LevelDisplayNAme -eq "Warning").count
+
+        $Errors = ($Events | Where-Object LevelDisplayName -eq "Error").count
+
+        $Critical = ($Events | Where-Object LevelDisplayName -eq "Critical").count
+    
+        If ($Critical -gt 0) {
+            $OverallHealth = "CRITICAL"
+        }
+        elseif ($Errors -gt 10) {
+            $OverallHealth = "WARNING"
+        }
+        Else {
+            $OverallHealth = "HEALTHY"
+        }
+
+        $Summary = [PSCustomObject]@{
+            EventsChecked = $Events.Count
+            Information = $Information
+            Warnings = $Warnings
+            Errors = $Errors
+            Critical = $Critical
+            OverallHealth = $OverallHealth
+        }
+        return $Summary
+    }
+    Catch{
+        Write-Host "Unable to generate Event Summary."
+        Write-Host $_.Exception.Message
+    }
+}
+
