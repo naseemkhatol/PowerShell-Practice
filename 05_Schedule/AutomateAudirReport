@@ -1,0 +1,20 @@
+$Action = New-ScheduledTaskAction `
+    -Execute "powershell.exe" `
+    -Argument '-ExecutionPolicy Bypass -File "C:\Users\kataw\Downloads\PowerShell-PC-Health-Checker-1\Windows-System-Audit\Main.ps1"'
+
+$Trigger = New-ScheduledTaskTrigger -Daily -At 8:00PM
+
+Register-ScheduledTask `
+    -TaskName "Windows System Audit" `
+    -Action $Action `
+    -Trigger $Trigger `
+    -Description "Runs the Powershell Windows System Audit"
+
+Get-ScheduledTask -TaskName "Windows System Audit"
+
+
+Start-ScheduledTask -TaskName "Windows System Audit"
+
+Get-ScheduledTaskInfo -TaskName "Windows System Audit"
+
+Unregister-ScheduledTask -TaskName "Windows System Audit" -confirm:$False
