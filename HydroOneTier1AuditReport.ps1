@@ -18,7 +18,7 @@ function Write-Checkpoint {
     )
 
     Write-Host ""
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $Message..." -ForegroundColor Cyan
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] ✓ $Message..." -ForegroundColor Cyan
 }
 
 Write-Host ""
