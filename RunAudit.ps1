@@ -1,6 +1,6 @@
 $ComputerName = Read-Host "Enter Laptop Name"
 
-$GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/main/HydroOneTier1AuditReport.ps1"
+$GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/HydroOneTier1AuditReport.ps1"
 
 Write-Host ""
 Write-Host "Creating C:\Temp on $ComputerName..." -ForegroundColor Cyan
