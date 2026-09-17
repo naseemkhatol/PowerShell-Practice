@@ -1,16 +1,13 @@
-param(
-    [Parameter(Mandatory)]
-    [string]$ComputerName
-)
+$ComputerName = Read-Host "Enter Laptop Name"
 
 $GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/main/HydroOneTier1AuditReport.ps1"
 
 Write-Host ""
-Write-Host "Creating Temp folder..." -ForegroundColor Cyan
+Write-Host "Creating C:\Temp on $ComputerName..." -ForegroundColor Cyan
 
 .\PsExec.exe "\\$ComputerName" cmd /c mkdir C:\Temp > $null 2>&1
 
-Write-Host "Downloading latest audit script..." -ForegroundColor Cyan
+Write-Host "Downloading latest audit script from GitHub..." -ForegroundColor Cyan
 
 .\PsExec.exe "\\$ComputerName" powershell.exe `
     -ExecutionPolicy Bypass `
@@ -22,20 +19,19 @@ Write-Host "Running audit..." -ForegroundColor Cyan
     -ExecutionPolicy Bypass `
     -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\AuditReport.txt'"
 
-Write-Host ""
-Write-Host "Audit completed." -ForegroundColor Green
-
 $ReportPath = "\\$ComputerName\C$\Temp\AuditReport.txt"
 
 if (Test-Path $ReportPath) {
 
-    Write-Host "Opening report..." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Audit completed successfully." -ForegroundColor Green
 
     notepad $ReportPath
 
 }
 else {
 
-    Write-Host "Audit completed but report could not be found." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Audit completed but report was not found." -ForegroundColor Yellow
 
 }
