@@ -11,15 +11,13 @@ function Get-RiskLevel {
     elseif ($Score -lt 80) { "High" }
     else { "Critical" }
 }
-
 function Write-Checkpoint {
-    param(
-        [string]$Message
-    )
+    param([string]$Message)
 
     Write-Host ""
-    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] ✓ $Message..." -ForegroundColor Cyan
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] [INFO] $Message..." -ForegroundColor Green
 }
+
 
 Write-Host ""
 Write-Host "Collecting information from $ComputerName..." -ForegroundColor Cyan
