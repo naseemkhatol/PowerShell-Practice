@@ -201,6 +201,35 @@ catch {
     }
 
     # =====================================================
+# ACTIVE DIRECTORY STATUS
+# =====================================================
+
+try {
+
+    $ADComputer = Get-ADComputer $env:COMPUTERNAME `
+        -Properties Enabled, DistinguishedName
+
+    $ADStatus = if ($ADComputer.Enabled) {
+        "Enabled"
+    }
+    else {
+        "Disabled"
+    }
+
+    # Clean OU Path
+    $OUPath = ($ADComputer.DistinguishedName -split ",",2)[1]
+    $OUPath = $OUPath -replace "OU=",""
+    $OUPath = $OUPath -replace ",DC=.*",""
+
+}
+catch {
+
+    $ADStatus = "Unable to Query"
+    $OUPath = "Unknown"
+
+}
+
+    # =====================================================
     # STOPPED AUTOMATIC SERVICES
     # =====================================================
 
@@ -413,6 +442,8 @@ catch {
         BitLockerProtection = $BitLockerProtection
         BitLockerVolumeStatus = $BitLockerVolumeStatus
 
+        ADStatus = $ADStatus
+        OrganizationalUnit = $OUPath
         AzureAdJoined = $AzureAdJoined
         DomainJoined = $DomainJoined
         DeviceId = $DeviceId
