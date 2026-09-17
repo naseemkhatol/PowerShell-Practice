@@ -200,13 +200,15 @@ catch {
 
     }
 
-    # =====================================================
+# =====================================================
 # ACTIVE DIRECTORY STATUS
 # =====================================================
 
 try {
 
-    $ADComputer = Get-ADComputer $env:COMPUTERNAME `
+    Import-Module ActiveDirectory -ErrorAction Stop
+
+    $ADComputer = Get-ADComputer $ComputerName `
         -Properties Enabled, DistinguishedName
 
     $ADStatus = if ($ADComputer.Enabled) {
@@ -216,10 +218,12 @@ try {
         "Disabled"
     }
 
-    # Clean OU Path
-    $OUPath = ($ADComputer.DistinguishedName -split ",",2)[1]
-    $OUPath = $OUPath -replace "OU=",""
-    $OUPath = $OUPath -replace ",DC=.*",""
+    $OUPath = (
+        (($ADComputer.DistinguishedName -split ",") |
+            Where-Object { $_ -like "OU=*" } |
+            ForEach-Object { $_ -replace "^OU=","" }
+        ) -join " > "
+    )
 
 }
 catch {
@@ -228,6 +232,7 @@ catch {
     $OUPath = "Unknown"
 
 }
+
 
     # =====================================================
     # STOPPED AUTOMATIC SERVICES
