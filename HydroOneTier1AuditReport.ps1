@@ -12,9 +12,20 @@ function Get-RiskLevel {
     else { "Critical" }
 }
 
+function Write-Checkpoint {
+    param(
+        [string]$Message
+    )
+
+    Write-Host ""
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] $Message..." -ForegroundColor Cyan
+}
+
 Write-Host ""
 Write-Host "Collecting information from $ComputerName..." -ForegroundColor Cyan
 Write-Host ""
+
+Write-Checkpoint "Getting Computer Information"
 
 try {
 
@@ -37,7 +48,7 @@ try {
         }
 
     $Services = Get-Service
-
+    Write-Checkpoint "Getting Memory and Disk Status"
     # =====================================================
     # MEMORY
     # =====================================================
@@ -280,7 +291,7 @@ catch {
     else {
         $ServiceRisk = 50
     }
-
+    Write-Checkpoint "Getting Network and Security Information"
     # =====================================================
     # UPTIME RISK
     # =====================================================
@@ -312,7 +323,7 @@ catch {
     # =====================================================
     # RECOMMENDATIONS
     # =====================================================
-
+    Write-Checkpoint "Analyzing Device Health"
     $Recommendations = @()
 
     if ($DiskFreePercent -lt 20) {
@@ -354,6 +365,8 @@ catch {
     # =====================================================
     # REPORT
     # =====================================================
+    
+    Write-Checkpoint "Generating Audit Report"
 
     $Report = [PSCustomObject]@{
 
@@ -434,7 +447,9 @@ catch {
     Write-Host ""
 
     $Report | Format-List
-
+    Write-Host ""
+    Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Audit Complete." -ForegroundColor Green
+    Write-Host ""
 }
 catch {
     Write-Error $_.Exception.Message
