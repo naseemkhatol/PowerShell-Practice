@@ -208,8 +208,7 @@ try {
 
     Import-Module ActiveDirectory -ErrorAction Stop
 
-    $ADComputer = Get-ADComputer $ComputerName `
-        -Properties Enabled, DistinguishedName
+    $ADComputer = Get-ADComputer $ComputerName -Properties Enabled, DistinguishedName
 
     $ADStatus = if ($ADComputer.Enabled) {
         "Enabled"
@@ -227,7 +226,7 @@ try {
 
 }
 catch {
-
+    Write-Host "AD Error:" $_.Exception.Message -ForegroundColor Red
     $ADStatus = "Unable to Query"
     $OUPath = "Unknown"
 
