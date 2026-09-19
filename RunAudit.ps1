@@ -1,3 +1,35 @@
+<#
+.SYNOPSIS
+Hydro One Tier 1 Audit Launcher
+
+.DESCRIPTION
+Prompts for a target device name, downloads the latest
+HydroOneTier1AuditReport.ps1, executes the audit
+remotely using PsExec, and generates an audit report.
+
+.AUTHOR
+Naseem Khatol
+
+.VERSION
+1.0
+
+.CREATED
+September 2026
+
+.REQUIREMENTS
+- PsExec.exe
+- Administrative rights on target device
+- Network connectivity to target device
+- GitHub access
+
+.OUTPUT
+AuditReport.txt
+
+.NOTES
+Created for Hydro One Tier 1 Support Operations.
+Automates remote execution of the Hydro One Device Health Audit.
+#>
+
 $ComputerName = Read-Host "Enter Laptop Name"
 
 $GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/HydroOneTier1AuditReport.ps1"
