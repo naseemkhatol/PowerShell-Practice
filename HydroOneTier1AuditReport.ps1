@@ -1,3 +1,35 @@
+<#
+.SYNOPSIS
+Hydro One Tier 1 Device Health Audit Report
+
+.DESCRIPTION
+Collects device health, performance, security, update, network,
+and Active Directory information to assist Tier 1 support
+engineers with troubleshooting and health assessments.
+
+.AUTHOR
+Naseem Khatol
+
+.VERSION
+1.0
+
+.CREATED
+September 2026
+
+.REQUIREMENTS
+- Windows PowerShell 5.1 or later
+- Administrative privileges recommended
+- Domain connectivity recommended
+- Active Directory module (optional)
+
+.OUTPUT
+Formatted Device Health Report
+
+.NOTES
+Created for Hydro One Tier 1 Support Operations.
+Designed to provide a quick health assessment of a Windows device.
+#>
+
 param(
     [Parameter(Mandatory = $true)]
     [string]$ComputerName
