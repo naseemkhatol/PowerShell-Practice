@@ -23,7 +23,7 @@ September 2026
 - GitHub access
 
 .OUTPUT
-AuditReport.txt
+<ComputerName>_HealthReport.txt
 
 .NOTES
 Created for Hydro One Tier 1 Support Operations.
@@ -61,9 +61,9 @@ while ($true) {
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
-        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\AuditReport.txt'"
+        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\$($ComputerName)_AuditReport.txt'"
 
-    $ReportPath = "\\$ComputerName\C$\Temp\AuditReport.txt"
+    $ReportPath = "\\$ComputerName\C$\Temp\$($ComputerName)_AuditReport.txt"
 
     if (Test-Path $ReportPath) {
 
