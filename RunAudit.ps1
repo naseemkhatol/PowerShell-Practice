@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-Hydro One Tier 1 Audit Launcher
+Hydro One Help 1 Audit Launcher
 
 .DESCRIPTION
 Prompts for a target device name, downloads the latest
@@ -32,7 +32,7 @@ Automates remote execution of the Hydro One Device Health Audit.
 
 Write-Host ""
 Write-Host "===============================================" -ForegroundColor Green
-Write-Host "        HYDRO ONE TIER 1 AUDIT LAUNCHER"
+Write-Host "              HELP 1 AUDIT LAUNCHER"
 Write-Host "===============================================" -ForegroundColor Green
 Write-Host ""
 
@@ -59,11 +59,13 @@ while ($true) {
 
     Write-Host "Running audit..." -ForegroundColor Cyan
 
+    .\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
+
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
-        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\$($ComputerName)_AuditReport.txt'"
+        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
 
-    $ReportPath = "\\$ComputerName\C$\Temp\$($ComputerName)_AuditReport.txt"
+    $ReportPath = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
 
     if (Test-Path $ReportPath) {
 
