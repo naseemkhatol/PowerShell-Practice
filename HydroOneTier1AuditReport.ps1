@@ -319,39 +319,6 @@ try {
     }
 
     # =====================================================
-    # ACTIVE DIRECTORY STATUS
-    # =====================================================
-
-    try {
-
-        Import-Module ActiveDirectory -ErrorAction Stop
-
-        $ADComputer = Get-ADComputer $ComputerName -Properties Enabled, DistinguishedName
-
-        $ADStatus = if ($ADComputer.Enabled) {
-            "Enabled"
-        }
-        else {
-            "Disabled"
-        }
-
-        $OUPath = (
-            (($ADComputer.DistinguishedName -split ",") |
-                Where-Object { $_ -like "OU=*" } |
-                ForEach-Object { $_ -replace "^OU=","" }
-            ) -join " > "
-        )
-
-    }
-    catch {
-        Write-Host "AD Error:" $_.Exception.Message -ForegroundColor Red
-        $ADStatus = "Unable to Query"
-        $OUPath = "Unknown"
-
-    }
-
-
-    # =====================================================
     # STOPPED AUTOMATIC SERVICES
     # =====================================================
 
@@ -487,7 +454,7 @@ try {
         $Recommendations += "CPU utilization is high."
     }
 
-    if ($AutoStopped.Count -gt 0) {
+    if ($AutoStopped.Count -gt 15) {
         $Recommendations += "$($AutoStopped.Count) automatic services are stopped."
     }
 
@@ -537,16 +504,8 @@ try {
     $IssueList += "High CPU Usage"
     }
 
-    if ($AutoStopped.Count -gt 0) {
-    $IssueList += "$($AutoStopped.Count) Automatic Services Stopped"
-    }
-
     if ($Uptime.TotalDays -gt 30) {
     $IssueList += "Device Has Not Been Rebooted Recently"
-    }
-
-    if ($PendingRebootStatus -eq "Yes") {
-    $Recommendations += "Device has a pending reboot."
     }
 
     if ($DaysSinceLastUpdate -is [int] -and $DaysSinceLastUpdate -gt 45) {
@@ -577,7 +536,6 @@ try {
         ComputerName = $env:COMPUTERNAME
         CurrentUser = $ComputerSystem.UserName
         LastLoggedOnUser = $ComputerSystem.UserName
-        Manufacturer = $ComputerSystem.Manufacturer
         Model = $ComputerSystem.Model
         SerialNumber = $BIOS.SerialNumber
 
@@ -590,22 +548,17 @@ try {
         Uptime = $FriendlyUptime
 
         CPUName = $CPU.Name
-        CPUCores = $CPU.NumberOfCores
-        LogicalProcessors = $CPU.NumberOfLogicalProcessors
         CPULoad = "$($CPU.LoadPercentage)%"
-        CPURisk = "$CPURisk%"
         CPUHealth = $CPUHealth
 
         TotalRAMGB = "{0:N2}" -f $TotalRAMGB
         FreeRAMGB = "{0:N2}" -f $FreeRAMGB
         MemoryUsed = "{0:N2}%" -f $MemoryUsedPercent
-        MemoryRisk = "$MemoryRisk%"
         MemoryHealth = $MemoryHealth
 
         DiskSizeGB = "{0:N2}" -f ($Disk.Size / 1GB)
         DiskFreeGB = "{0:N2}" -f ($Disk.FreeSpace / 1GB)
         DiskFreePercent = "{0:N2}%" -f $DiskFreePercent
-        DiskRisk = "$DiskRisk%"
         DiskHealth = $DiskHealth
 
         IPv4Addresses = ($IPAddresses.IPAddress -join ", ")
@@ -622,30 +575,18 @@ try {
         BitLockerProtection = $BitLockerProtection
         BitLockerVolumeStatus = $BitLockerVolumeStatus
 
-        ADStatus = $ADStatus
-        OrganizationalUnit = $OUPath
         AzureAdJoined = $AzureAdJoined
         DomainJoined = $DomainJoined
         DeviceId = $DeviceId
 
         BatteryStatus = $BatteryStatus
-        BatteryChemistry = $BatteryChemistry
 
         LastInstalledUpdate = $LastInstalledUpdate
         LastUpdateDate = $FriendlyLastUpdateDate
         DaysSinceLastUpdate = $DaysSinceLastUpdate
         PendingReboot = $PendingRebootStatus
 
-        RunningServices = (
-            $Services |
-            Where-Object Status -eq Running
-        ).Count
-
-        AutoStoppedServices = $AutoStopped.Count
-        ServiceRisk = "$ServiceRisk%"
-
         OverallRiskScore = "$OverallRisk%"
-        OverallRiskLevel = Get-RiskLevel $OverallRisk
 
         Recommendations = ($Recommendations -join " | ")
     }
