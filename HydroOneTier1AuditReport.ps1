@@ -147,20 +147,21 @@ try {
         [int]$Uptime.TotalDays,
         $Uptime.Hours
 
-    # =====================================================
+   # =====================================================
     # BITLOCKER
     # =====================================================
+
     try {
 
         $BitLockerText = manage-bde -status C: | Out-String
 
-        if ($BitLockerText -match "Protection Status:\s+Protection On") {
+        if ($BitLockerText -match "Protection On") {
 
             $BitLockerProtection = "Enabled"
             $BitLockerVolumeStatus = "Protected"
 
         }
-        elseif ($BitLockerText -match "Protection Status:\s+Protection Off") {
+        elseif ($BitLockerText -match "Protection Off") {
 
             $BitLockerProtection = "Disabled"
             $BitLockerVolumeStatus = "Unprotected"
@@ -168,7 +169,7 @@ try {
         }
         else {
 
-            $BitLockerProtection = "Not Configured"
+            $BitLockerProtection = "Unknown"
             $BitLockerVolumeStatus = "Unknown"
 
         }
@@ -180,7 +181,7 @@ try {
         $BitLockerVolumeStatus = "Unknown"
 
     }
-
+    
     # =====================================================
     # WINDOWS UPDATES
     # =====================================================
@@ -466,8 +467,17 @@ try {
         $Recommendations += "Windows updates may be outdated."
     }
 
-    if ($BitLockerProtection -ne "Enabled") {
-        $Recommendations += "BitLocker protection may not be enabled."
+
+    switch ($BitLockerProtection) {
+
+        "Disabled" {
+            $Recommendations += "BitLocker protection is disabled."
+        }
+
+        "Unknown" {
+            $Recommendations += "Unable to determine BitLocker status."
+        }
+
     }
 
     if ($AzureAdJoined -ne "YES") {
@@ -512,8 +522,12 @@ try {
     $IssueList += "Windows Updates May Be Outdated"
     }
 
-    if ($BitLockerProtection -ne "Enabled") {
+   if ($BitLockerProtection -eq "Disabled") {
     $IssueList += "BitLocker Not Enabled"
+    }
+
+    if ($BitLockerProtection -eq "Unknown") {
+        $IssueList += "Unable To Determine BitLocker Status"
     }
 
     if ($AzureAdJoined -ne "YES") {
