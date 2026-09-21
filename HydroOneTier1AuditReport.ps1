@@ -79,6 +79,44 @@ try {
 
     $Services = Get-Service
     Write-Checkpoint "Getting Memory and Disk Status"
+
+    # =====================================================
+    # NETWORK HEALTH
+    # =====================================================
+
+    try {
+
+        $DNSStatus = if (Resolve-DnsName "www.microsoft.com" -ErrorAction SilentlyContinue) {
+            "PASS"
+        }
+        else {
+            "FAIL"
+        }
+
+    }
+    catch {
+
+        $DNSStatus = "FAIL"
+
+    }
+
+    try {
+
+        Invoke-WebRequest `
+            -Uri "https://www.microsoft.com" `
+            -UseBasicParsing `
+            -TimeoutSec 5 `
+            -ErrorAction Stop > $null
+
+        $InternetStatus = "PASS"
+
+    }
+    catch {
+
+        $InternetStatus = "FAIL"
+
+    }
+
     # =====================================================
     # MEMORY
     # =====================================================
@@ -102,40 +140,46 @@ try {
     # =====================================================
 
     $Uptime = (Get-Date) - $OS.LastBootUpTime
+    $LastRebootDate = Get-Date $OS.LastBootUpTime -Format "MMMM dd, yyyy"
+
+    $FriendlyUptime =
+        "{0} Days, {1} Hours" -f
+        [int]$Uptime.TotalDays,
+        $Uptime.Hours
 
     # =====================================================
     # BITLOCKER
     # =====================================================
-try {
+    try {
 
-    $BitLockerText = manage-bde -status C: | Out-String
+        $BitLockerText = manage-bde -status C: | Out-String
 
-    if ($BitLockerText -match "Protection Status:\s+Protection On") {
+        if ($BitLockerText -match "Protection Status:\s+Protection On") {
 
-        $BitLockerProtection = "Enabled"
-        $BitLockerVolumeStatus = "Protected"
+            $BitLockerProtection = "Enabled"
+            $BitLockerVolumeStatus = "Protected"
+
+        }
+        elseif ($BitLockerText -match "Protection Status:\s+Protection Off") {
+
+            $BitLockerProtection = "Disabled"
+            $BitLockerVolumeStatus = "Unprotected"
+
+        }
+        else {
+
+            $BitLockerProtection = "Not Configured"
+            $BitLockerVolumeStatus = "Unknown"
+
+        }
 
     }
-    elseif ($BitLockerText -match "Protection Status:\s+Protection Off") {
+    catch {
 
-        $BitLockerProtection = "Disabled"
-        $BitLockerVolumeStatus = "Unprotected"
-
-    }
-    else {
-
-        $BitLockerProtection = "Not Configured"
+        $BitLockerProtection = "Unknown"
         $BitLockerVolumeStatus = "Unknown"
 
     }
-
-}
-catch {
-
-    $BitLockerProtection = "Unknown"
-    $BitLockerVolumeStatus = "Unknown"
-
-}
 
     # =====================================================
     # WINDOWS UPDATES
@@ -150,6 +194,8 @@ catch {
         $LastInstalledUpdate = $LastHotFix.HotFixID
 
         $LastUpdateDate = $LastHotFix.InstalledOn
+        $FriendlyLastUpdateDate =
+        Get-Date $LastHotFix.InstalledOn -Format "MMMM dd, yyyy"
 
         $DaysSinceLastUpdate =
             (New-TimeSpan -Start $LastHotFix.InstalledOn -End (Get-Date)).Days
@@ -158,7 +204,47 @@ catch {
 
         $LastInstalledUpdate = "Unknown"
         $LastUpdateDate = "Unknown"
+        $FriendlyLastUpdateDate = "Unknown"
         $DaysSinceLastUpdate = "Unknown"
+
+    }
+
+    # =====================================================
+    # PENDING REBOOT
+    # =====================================================
+
+    try {
+
+        $PendingReboot = $false
+
+        if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending") {
+            $PendingReboot = $true
+        }
+
+        if (Test-Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired") {
+            $PendingReboot = $true
+        }
+
+        if (Get-ItemProperty `
+            "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager" `
+            -Name PendingFileRenameOperations `
+            -ErrorAction SilentlyContinue) {
+
+            $PendingReboot = $true
+        }
+
+        if ($PendingReboot) {
+            $PendingRebootStatus = "Yes"
+        }
+        else {
+            $PendingRebootStatus = "No"
+        }
+
+        }
+    catch {
+
+        $PendingRebootStatus = "Unknown"
+
     }
 
     # =====================================================
@@ -232,37 +318,37 @@ catch {
 
     }
 
-# =====================================================
-# ACTIVE DIRECTORY STATUS
-# =====================================================
+    # =====================================================
+    # ACTIVE DIRECTORY STATUS
+    # =====================================================
 
-try {
+    try {
 
-    Import-Module ActiveDirectory -ErrorAction Stop
+        Import-Module ActiveDirectory -ErrorAction Stop
 
-    $ADComputer = Get-ADComputer $ComputerName -Properties Enabled, DistinguishedName
+        $ADComputer = Get-ADComputer $ComputerName -Properties Enabled, DistinguishedName
 
-    $ADStatus = if ($ADComputer.Enabled) {
-        "Enabled"
+        $ADStatus = if ($ADComputer.Enabled) {
+            "Enabled"
+        }
+        else {
+            "Disabled"
+        }
+
+        $OUPath = (
+            (($ADComputer.DistinguishedName -split ",") |
+                Where-Object { $_ -like "OU=*" } |
+                ForEach-Object { $_ -replace "^OU=","" }
+            ) -join " > "
+        )
+
     }
-    else {
-        "Disabled"
+    catch {
+        Write-Host "AD Error:" $_.Exception.Message -ForegroundColor Red
+        $ADStatus = "Unable to Query"
+        $OUPath = "Unknown"
+
     }
-
-    $OUPath = (
-        (($ADComputer.DistinguishedName -split ",") |
-            Where-Object { $_ -like "OU=*" } |
-            ForEach-Object { $_ -replace "^OU=","" }
-        ) -join " > "
-    )
-
-}
-catch {
-    Write-Host "AD Error:" $_.Exception.Message -ForegroundColor Red
-    $ADStatus = "Unable to Query"
-    $OUPath = "Unknown"
-
-}
 
 
     # =====================================================
@@ -406,7 +492,7 @@ catch {
     }
 
     if ($Uptime.TotalDays -gt 30) {
-        $Recommendations += "Device has not been rebooted recently."
+    $Recommendations += "Device has not been rebooted recently."
     }
 
     if ($DaysSinceLastUpdate -is [int] -and $DaysSinceLastUpdate -gt 45) {
@@ -426,9 +512,64 @@ catch {
     }
 
     # =====================================================
+    # EXECUTIVE SUMMARY
+    # =====================================================
+
+    $IssueList = @()
+
+    if ($DNSStatus -eq "FAIL") {
+        $IssueList += "DNS Resolution Failed"
+    }
+
+    if ($InternetStatus -eq "FAIL") {
+        $IssueList += "Internet Connectivity Failed"
+    }
+
+    if ($DiskFreePercent -lt 20) {
+    $IssueList += "Low Disk Space"
+    }
+
+    if ($MemoryUsedPercent -gt 80) {
+    $IssueList += "High Memory Usage"
+    }
+
+    if ($CPU.LoadPercentage -gt 80) {
+    $IssueList += "High CPU Usage"
+    }
+
+    if ($AutoStopped.Count -gt 0) {
+    $IssueList += "$($AutoStopped.Count) Automatic Services Stopped"
+    }
+
+    if ($Uptime.TotalDays -gt 30) {
+    $IssueList += "Device Has Not Been Rebooted Recently"
+    }
+
+    if ($PendingRebootStatus -eq "Yes") {
+    $Recommendations += "Device has a pending reboot."
+    }
+
+    if ($DaysSinceLastUpdate -is [int] -and $DaysSinceLastUpdate -gt 45) {
+    $IssueList += "Windows Updates May Be Outdated"
+    }
+
+    if ($BitLockerProtection -ne "Enabled") {
+    $IssueList += "BitLocker Not Enabled"
+    }
+
+    if ($AzureAdJoined -ne "YES") {
+    $IssueList += "Device Not Entra Joined"
+    }
+
+    if ($IssueList.Count -eq 0) {
+    $IssueList += "No Issues Detected"
+    }
+
+    # =====================================================
     # REPORT
     # =====================================================
     
+
     Write-Checkpoint "Generating Audit Report"
 
     $Report = [PSCustomObject]@{
@@ -445,7 +586,8 @@ catch {
         BuildNumber = $OS.BuildNumber
         InstallDate = $OS.InstallDate
         LastBootTime = $OS.LastBootUpTime
-        UptimeDays = "{0:N1}" -f $Uptime.TotalDays
+        LastRebootDate = $LastRebootDate
+        Uptime = $FriendlyUptime
 
         CPUName = $CPU.Name
         CPUCores = $CPU.NumberOfCores
@@ -467,6 +609,8 @@ catch {
         DiskHealth = $DiskHealth
 
         IPv4Addresses = ($IPAddresses.IPAddress -join ", ")
+        DNSResolution = $DNSStatus
+        InternetConnectivity = $InternetStatus
 
         NetworkAdapters = (
             $Adapters |
@@ -488,8 +632,9 @@ catch {
         BatteryChemistry = $BatteryChemistry
 
         LastInstalledUpdate = $LastInstalledUpdate
-        LastUpdateDate = $LastUpdateDate
+        LastUpdateDate = $FriendlyLastUpdateDate
         DaysSinceLastUpdate = $DaysSinceLastUpdate
+        PendingReboot = $PendingRebootStatus
 
         RunningServices = (
             $Services |
@@ -505,13 +650,33 @@ catch {
         Recommendations = ($Recommendations -join " | ")
     }
 
+
     Write-Host ""
     Write-Host "===============================================" -ForegroundColor Green
     Write-Host "      HYDRO ONE TIER 1 DEVICE HEALTH REPORT"
     Write-Host "===============================================" -ForegroundColor Green
     Write-Host ""
 
+    Write-Host "OVERALL DEVICE STATUS" -ForegroundColor Green
+    Write-Host "-----------------------------------------------"
+
+    Write-Host "Risk Level : $(Get-RiskLevel $OverallRisk)"
+    Write-Host "Risk Score : $('{0:N0}' -f $OverallRisk)%"
+
+    Write-Host ""
+    Write-Host "Issues Found"
+
+    foreach ($Issue in $IssueList) {
+        Write-Host " - $Issue"
+    }
+
+    Write-Host ""
+    Write-Host "-----------------------------------------------"
+    Write-Host ""
+
     $Report | Format-List
+
+
     Write-Host ""
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] Audit Complete." -ForegroundColor Green
     Write-Host ""
