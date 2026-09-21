@@ -23,7 +23,7 @@ September 2026
 - GitHub access
 
 .OUTPUT
-<ComputerName>_HealthReport.txt
+<ComputerName>_AuditReport.txt
 
 .NOTES
 Created for Hydro One Tier 1 Support Operations.
@@ -38,6 +38,12 @@ Write-Host ""
 
 $GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/HydroOneTier1AuditReport.ps1"
 
+$LocalReportFolder = "C:\Temp\Audit Reports"
+
+if (!(Test-Path $LocalReportFolder)) {
+    New-Item -Path $LocalReportFolder -ItemType Directory -Force | Out-Null
+}
+
 while ($true) {
 
     $ComputerName = Read-Host "Enter Laptop Name (or type EXIT to quit)"
@@ -46,12 +52,50 @@ while ($true) {
         break
     }
 
+    # =====================================================
+    # ACTIVE DIRECTORY LOOKUP
+    # =====================================================
+
+    try {
+
+        Import-Module ActiveDirectory -ErrorAction Stop
+
+        $ADComputer = Get-ADComputer `
+            $ComputerName `
+            -Properties Enabled, DistinguishedName
+
+        $ADStatus = if ($ADComputer.Enabled) {
+            "Enabled"
+        }
+        else {
+            "Disabled"
+        }
+
+        $OUPath = (
+            (($ADComputer.DistinguishedName -split ",") |
+                Where-Object { $_ -like "OU=*" } |
+                ForEach-Object { $_ -replace "^OU=","" }
+            ) -join " > "
+        )
+
+    }
+    catch {
+
+        $ADStatus = "Unable to Query"
+        $OUPath = "Unknown"
+
+    }
+
     Write-Host ""
     Write-Host "Creating C:\Temp on $ComputerName..." -ForegroundColor Cyan
 
     .\PsExec.exe "\\$ComputerName" cmd /c mkdir C:\Temp > $null 2>&1
 
-    Write-Host "Downloading latest audit script from GitHub..." -ForegroundColor Cyan
+    Write-Host "Creating remote report folder..." -ForegroundColor Cyan
+
+    .\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
+
+    Write-Host "Downloading latest audit script..." -ForegroundColor Cyan
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
@@ -59,35 +103,43 @@ while ($true) {
 
     Write-Host "Running audit..." -ForegroundColor Cyan
 
-    .\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
-
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
         -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
 
-    $ReportPath = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
+    $RemoteReportPath = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
 
-    if (Test-Path $ReportPath) {
+    $LocalReportPath = Join-Path `
+        $LocalReportFolder `
+        "$($ComputerName)_AuditReport.txt"
+
+    if (Test-Path $RemoteReportPath) {
+
+        Copy-Item `
+            $RemoteReportPath `
+            $LocalReportPath `
+            -Force
+
+        Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
+        Add-Content -Path $LocalReportPath "-----------------------------------------------"
+        Add-Content -Path $LocalReportPath "ADStatus           : $ADStatus"
+        Add-Content -Path $LocalReportPath "OrganizationalUnit : $OUPath"
 
         Write-Host ""
         Write-Host "Audit completed successfully." -ForegroundColor Green
+        Write-Host "Report copied locally." -ForegroundColor Green
         Write-Host "Opening report..." -ForegroundColor Green
         Write-Host ""
 
-        $LocalReportFolder = ".\Audit Reports"
+        notepad $LocalReportPath
 
-        if (!(Test-Path $LocalReportFolder)) {
-            New-Item -Path $LocalReportFolder -ItemType Directory | Out-Null
-        }
+        Write-Host "Cleaning up remote files..." -ForegroundColor Cyan
 
-        Copy-Item `
-            $ReportPath `
-            "$LocalReportFolder\$($ComputerName)_AuditReport.txt" `
-            -Force
+        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\HydroOneTier1AuditReport.ps1" > $null 2>&1
 
-        Write-Host "Report copied locally." -ForegroundColor Green
+        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt" > $null 2>&1
 
-        notepad $ReportPath
+        Write-Host "Cleanup complete." -ForegroundColor Green
 
     }
     else {
@@ -98,8 +150,10 @@ while ($true) {
 
     }
 
+    Write-Host ""
     Write-Host "Ready for next device..." -ForegroundColor Green
     Write-Host ""
+
 }
 
 Write-Host ""
