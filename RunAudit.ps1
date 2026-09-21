@@ -53,20 +53,6 @@ while ($true) {
     }
 
     # =====================================================
-    # CONNECTIVITY CHECK
-    # =====================================================
-
-    if (!(Test-Path "\\$ComputerName\C$")) {
-
-        Write-Host ""
-        Write-Host "ERROR: Unable to access \\$ComputerName\C$" -ForegroundColor Red
-        Write-Host "The device may be offline, not connected to VPN, or blocking SMB traffic." -ForegroundColor Red
-        Write-Host ""
-
-        continue
-    }
-
-    # =====================================================
     # ACTIVE DIRECTORY LOOKUP
     # =====================================================
 
@@ -134,7 +120,6 @@ while ($true) {
             $LocalReportPath `
             -Force
 
-        Add-Content -Path $LocalReportPath ""
         Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
         Add-Content -Path $LocalReportPath "-----------------------------------------------"
         Add-Content -Path $LocalReportPath "ADStatus           : $ADStatus"
@@ -153,8 +138,6 @@ while ($true) {
         .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\HydroOneTier1AuditReport.ps1" > $null 2>&1
 
         .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt" > $null 2>&1
-
-        .\PsExec.exe "\\$ComputerName" cmd /c rmdir "C:\Temp\Audit Reports" > $null 2>&1
 
         Write-Host "Cleanup complete." -ForegroundColor Green
 
