@@ -72,6 +72,19 @@ while ($true) {
         Write-Host "Opening report..." -ForegroundColor Green
         Write-Host ""
 
+        $LocalReportFolder = ".\Audit Reports"
+
+        if (!(Test-Path $LocalReportFolder)) {
+            New-Item -Path $LocalReportFolder -ItemType Directory | Out-Null
+        }
+
+        Copy-Item `
+            $ReportPath `
+            "$LocalReportFolder\$($ComputerName)_AuditReport.txt" `
+            -Force
+
+        Write-Host "Report copied locally." -ForegroundColor Green
+
         notepad $ReportPath
 
     }
