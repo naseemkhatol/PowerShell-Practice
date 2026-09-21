@@ -466,7 +466,7 @@ try {
         $Recommendations += "Windows updates may be outdated."
     }
 
-    if ($BitLockerProtection -ne 1) {
+    if ($BitLockerProtection -ne "Enabled") {
         $Recommendations += "BitLocker protection may not be enabled."
     }
 
