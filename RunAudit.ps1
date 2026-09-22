@@ -3,8 +3,7 @@
 Hydro One Help 1 Audit Launcher
 
 .DESCRIPTION
-Prompts for a target device name, downloads the latest
-HydroOneTier1AuditReport.ps1, executes the audit
+Prompts for a target device name, executes the audit
 remotely using PsExec, and generates an audit report.
 
 .AUTHOR
@@ -20,7 +19,7 @@ September 2026
 - PsExec.exe
 - Administrative rights on target device
 - Network connectivity to target device
-- GitHub access
+
 
 .OUTPUT
 <ComputerName>_AuditReport.txt
@@ -36,12 +35,20 @@ Write-Host "              HELP 1 AUDIT LAUNCHER"
 Write-Host "===============================================" -ForegroundColor Green
 Write-Host ""
 
-$GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/HydroOneTier1AuditReport.ps1"
-
 $LocalReportFolder = "C:\Temp\Audit Reports"
 
 if (!(Test-Path $LocalReportFolder)) {
     New-Item -Path $LocalReportFolder -ItemType Directory -Force | Out-Null
+}
+
+if (!(Test-Path ".\HelpOneAuditTools.ps1")) {
+
+    Write-Host ""
+    Write-Host "ERROR: HelpOneAuditTools.ps1 was not found." -ForegroundColor Red
+    Write-Host "Place HelpOneAuditTools.ps1 in the same folder as RunAudit.ps1 and PsExec.exe." -ForegroundColor Red
+    Write-Host ""
+
+    exit
 }
 
 while ($true) {
@@ -67,7 +74,7 @@ while ($true) {
         Write-Host "    - Is not connected to VPN"
         Write-Host "    - Has SMB traffic (TCP 445) blocked"
         Write-Host "    - Has administrative shares unavailable"
-        Write-Host " - And won't establish a connection"
+        Write-Host " - The audit tool will be unable to establish a connection"
         Write-Host ""
 
         continue
@@ -116,17 +123,18 @@ while ($true) {
 
     .\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
 
-    Write-Host "Downloading latest audit script..." -ForegroundColor Cyan
+    Write-Host "Copying audit script..." -ForegroundColor Cyan
 
-    .\PsExec.exe "\\$ComputerName" powershell.exe `
-        -ExecutionPolicy Bypass `
-        -Command "Invoke-WebRequest -Uri '$GitHubRawUrl' -OutFile 'C:\Temp\HydroOneTier1AuditReport.ps1'"
+    Copy-Item `
+        ".\HelpOneAuditTools.ps1" `
+        "\\$ComputerName\C$\Temp\HelpOneAuditTools.ps1" `
+        -Force
 
     Write-Host "Running audit..." -ForegroundColor Cyan
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
-        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
+        -Command "& 'C:\Temp\HelpOneAuditTools.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
 
     $RemoteReportPath = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
 
@@ -156,7 +164,7 @@ while ($true) {
 
         Write-Host "Cleaning up remote files..." -ForegroundColor Cyan
 
-        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\HydroOneTier1AuditReport.ps1" > $null 2>&1
+        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\HelpOneAuditTools.ps1" > $null 2>&1
 
         .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt" > $null 2>&1
 
