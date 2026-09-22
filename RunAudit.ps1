@@ -63,10 +63,11 @@ while ($true) {
         Write-Host "Possible causes:" -ForegroundColor Yellow
         Write-Host " - Device is offline"
         Write-Host " - Device is asleep"
-        Write-Host " - If User is at home it causes:"
-        Write-Host " - Device is not connected to VPN" -ForegroundColor Yellow
-        Write-Host " - SMB traffic (TCP 445) is blocked"
-        Write-Host " - Administrative shares are unavailable"
+        Write-Host " - If the user is working from home, it is highly likely the device:"
+        Write-Host "    - Is not connected to VPN"
+        Write-Host "    - Has SMB traffic (TCP 445) blocked"
+        Write-Host "    - Has administrative shares unavailable"
+        Write-Host " - And won't establish a connection"
         Write-Host ""
 
         continue
