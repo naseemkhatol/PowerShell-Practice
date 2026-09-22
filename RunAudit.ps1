@@ -70,10 +70,10 @@ while ($true) {
         Write-Host "Possible causes:" -ForegroundColor Yellow
         Write-Host " - Device is offline"
         Write-Host " - Device is asleep"
-        Write-Host " - If the user is working from home, it is highly likely the device:"
-        Write-Host "    - Is not connected to VPN"
-        Write-Host "    - Has SMB traffic (TCP 445) blocked"
-        Write-Host "    - Has administrative shares unavailable"
+        Write-Host " - If the user is working from home, it is highly likely:"
+        Write-Host "    - The device is not connected to VPN"
+        Write-Host "    - SMB traffic (TCP 445) is blocked"
+        Write-Host "    - Administrative shares are unavailable"
         Write-Host " - The audit tool will be unable to establish a connection"
         Write-Host ""
 
@@ -130,6 +130,15 @@ while ($true) {
         "\\$ComputerName\C$\Temp\HelpOneAuditTools.ps1" `
         -Force
 
+    if (!(Test-Path "\\$ComputerName\C$\Temp\HydroOneTier1AuditReport.ps1")) {
+
+    Write-Host ""
+    Write-Host "ERROR: Audit script failed to download from GitHub." -ForegroundColor Red
+    Write-Host "Verify the target machine has Internet access." -ForegroundColor Red
+    Write-Host ""
+
+    continue
+}
     Write-Host "Running audit..." -ForegroundColor Cyan
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
