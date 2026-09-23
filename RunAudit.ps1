@@ -161,11 +161,51 @@ while ($true) {
             $LocalReportPath `
             -Force
 
-        Add-Content -Path $LocalReportPath ""
-        Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
-        Add-Content -Path $LocalReportPath "-----------------------------------------------"
-        Add-Content -Path $LocalReportPath "ADStatus           : $ADStatus"
-        Add-Content -Path $LocalReportPath "OrganizationalUnit : $OUPath"
+     # =====================================================
+    # PASSWORD LAST SET
+    # =====================================================
+    
+    $PasswordLastSet = "Unable to Query"
+    
+    try {
+    
+        $CurrentUserLine = Select-String `
+            -Path $LocalReportPath `
+            -Pattern "^CurrentUser"
+    
+        if ($CurrentUserLine) {
+    
+            $CurrentUser = (
+                $CurrentUserLine.Line -split ":" , 2
+            )[1].Trim()
+    
+            if ($CurrentUser -match "\\") {
+    
+                $SamAccountName = (
+                    $CurrentUser -split "\\"
+                )[-1]
+    
+                $PasswordLastSet = (
+                    Get-ADUser `
+                        $SamAccountName `
+                        -Properties PasswordLastSet
+                ).PasswordLastSet
+            }
+        }
+    
+    }
+    catch {
+    
+        $PasswordLastSet = "Unable to Query"
+    
+    }
+    
+    Add-Content -Path $LocalReportPath ""
+    Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
+    Add-Content -Path $LocalReportPath "-----------------------------------------------"
+    Add-Content -Path $LocalReportPath "ADStatus           : $ADStatus"
+    Add-Content -Path $LocalReportPath "OrganizationalUnit : $OUPath"
+    Add-Content -Path $LocalReportPath "PasswordLastSet    : $PasswordLastSet"
 
         Write-Host ""
         Write-Host "Audit completed successfully." -ForegroundColor Green
