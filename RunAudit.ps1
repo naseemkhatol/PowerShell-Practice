@@ -114,28 +114,8 @@ while ($true) {
 
     Write-Host "Creating remote report folder..." -ForegroundColor Cyan
 
-.\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
-    
-    # =====================================================
-    # REMOVE FILES FROM PREVIOUS AUDIT
-    # =====================================================
-    
-    Write-Host "Removing files from any previous audit..." -ForegroundColor Cyan
-    
-    $OldAuditScript = "\\$ComputerName\C$\Temp\HydroOneTier1AuditReport.ps1"
-    
-    $OldAuditReport = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
-    
-    Remove-Item `
-        -Path $OldAuditScript `
-        -Force `
-        -ErrorAction SilentlyContinue
-    
-    Remove-Item `
-        -Path $OldAuditReport `
-        -Force `
-        -ErrorAction SilentlyContinue
-    
+    .\PsExec.exe "\\$ComputerName" cmd /c mkdir "C:\Temp\Audit Reports" > $null 2>&1
+
     Write-Host "Downloading latest audit script..." -ForegroundColor Cyan
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
@@ -180,6 +160,7 @@ while ($true) {
             $RemoteReportPath `
             $LocalReportPath `
             -Force
+    $AuditDateTime = Get-Date -Format "MMMM dd, yyyy h:mm:ss tt"
 
      # =====================================================
     # PASSWORD LAST SET
@@ -247,7 +228,8 @@ while ($true) {
     
         }
     }
-    
+
+    Add-Content -Path $LocalReportPath "AuditCompleted : $AuditDateTime"
     Add-Content -Path $LocalReportPath ""
     Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
     Add-Content -Path $LocalReportPath "-----------------------------------------------"
