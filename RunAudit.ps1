@@ -190,6 +190,10 @@ while ($true) {
                         $SamAccountName `
                         -Properties PasswordLastSet
                 ).PasswordLastSet
+                
+                if ($PasswordLastSet) {
+                    $PasswordLastSet = [datetime]$PasswordLastSet
+                }
             }
         }
     
@@ -199,6 +203,30 @@ while ($true) {
         $PasswordLastSet = "Unable to Query"
     
     }
+
+    # =====================================================
+    # PASSWORD EXPIRY (365 DAYS)
+    # =====================================================
+    
+    $PasswordExpired = "Unable to Determine"
+    
+    if ($PasswordLastSet -is [datetime]) {
+    
+        $ExpiryDate = $PasswordLastSet.AddDays(365)
+    
+        if ((Get-Date) -gt $ExpiryDate) {
+    
+            $DaysExpired = ((Get-Date) - $ExpiryDate).Days
+            $PasswordExpired = "Yes (Expired $DaysExpired days ago)"
+    
+        }
+        else {
+    
+            $DaysRemaining = ($ExpiryDate - (Get-Date)).Days
+            $PasswordExpired = "No ($DaysRemaining days remaining)"
+    
+        }
+    }
     
     Add-Content -Path $LocalReportPath ""
     Add-Content -Path $LocalReportPath "DIRECTORY INFORMATION"
@@ -206,6 +234,7 @@ while ($true) {
     Add-Content -Path $LocalReportPath "ADStatus           : $ADStatus"
     Add-Content -Path $LocalReportPath "OrganizationalUnit : $OUPath"
     Add-Content -Path $LocalReportPath "PasswordLastSet    : $PasswordLastSet"
+    Add-Content -Path $LocalReportPath "PasswordExpired    : $PasswordExpired"
 
         Write-Host ""
         Write-Host "Audit completed successfully." -ForegroundColor Green
