@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Hydro One Help 1 Audit Launcher
+Audit Launcher
 
 .DESCRIPTION
 Prompts for a target device name, downloads the latest
-HydroOneTier1AuditReport.ps1, executes the audit
+AuditReport.ps1, executes the audit
 remotely using PsExec, and generates an audit report.
 
 .AUTHOR
@@ -26,17 +26,17 @@ September 2026
 <ComputerName>_AuditReport.txt
 
 .NOTES
-Created for Hydro One Tier 1 Support Operations.
+Created for Support Operations.
 Automates remote execution of the Hydro One Device Health Audit.
 #>
 
 Write-Host ""
 Write-Host "===============================================" -ForegroundColor Green
-Write-Host "              HELP 1 AUDIT LAUNCHER"
+Write-Host "              AUDIT LAUNCHER"
 Write-Host "===============================================" -ForegroundColor Green
 Write-Host ""
 
-$GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/HydroOneTier1AuditReport.ps1"
+$GitHubRawUrl = "https://raw.githubusercontent.com/naseemkhatol/PowerShell-Practice/refs/heads/main/AuditReport.ps1"
 
 $LocalReportFolder = "C:\Temp\Audit Reports"
 
@@ -120,13 +120,13 @@ while ($true) {
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
-        -Command "Invoke-WebRequest -Uri '$GitHubRawUrl' -OutFile 'C:\Temp\HydroOneTier1AuditReport.ps1'"
+        -Command "Invoke-WebRequest -Uri '$GitHubRawUrl' -OutFile 'C:\Temp\AuditReport.ps1'"
 
     # =====================================================
     # VERIFY DOWNLOAD
     # =====================================================
 
-    if (!(Test-Path "\\$ComputerName\C$\Temp\HydroOneTier1AuditReport.ps1")) {
+    if (!(Test-Path "\\$ComputerName\C$\Temp\AuditReport.ps1")) {
 
         Write-Host ""
         Write-Host "ERROR: Audit script failed to download." -ForegroundColor Red
@@ -146,7 +146,7 @@ while ($true) {
 
     .\PsExec.exe "\\$ComputerName" powershell.exe `
         -ExecutionPolicy Bypass `
-        -Command "& 'C:\Temp\HydroOneTier1AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
+        -Command "& 'C:\Temp\AuditReport.ps1' -ComputerName '$ComputerName' | Out-File 'C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt'"
 
     $RemoteReportPath = "\\$ComputerName\C$\Temp\Audit Reports\$($ComputerName)_AuditReport.txt"
 
@@ -248,7 +248,7 @@ while ($true) {
 
         Write-Host "Cleaning up remote files..." -ForegroundColor Cyan
 
-        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\HydroOneTier1AuditReport.ps1" > $null 2>&1
+        .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\AuditReport.ps1" > $null 2>&1
 
         .\PsExec.exe "\\$ComputerName" cmd /c del /f /q "C:\Temp\Audit Reports\$($ComputerName)_AuditReport.txt" > $null 2>&1
 
