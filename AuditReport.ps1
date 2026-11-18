@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-Hydro One Help 1 Device Health Audit Report
+ Device Health Audit Report
 
 .DESCRIPTION
 Collects device health, performance, security, update, network,
-and Active Directory information to assist Help 1 support
+and Active Directory information to assist support
 engineers with troubleshooting and health assessments.
 
 .AUTHOR
@@ -26,7 +26,6 @@ September 2026
 Formatted Device Health Report
 
 .NOTES
-Created for Hydro One Help 1 Support Operations.
 Designed to provide a quick health assessment of a Windows device.
 #>
 
@@ -608,7 +607,7 @@ try {
 
     Write-Host ""
     Write-Host "===============================================" -ForegroundColor Green
-    Write-Host "         HELP 1 DEVICE HEALTH REPORT"
+    Write-Host "        DEVICE HEALTH REPORT"
     Write-Host "===============================================" -ForegroundColor Green
     Write-Host ""
 
