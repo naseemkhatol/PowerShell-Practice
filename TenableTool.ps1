@@ -1,5 +1,5 @@
 # ============================================================
-# HELPONE REMOTE DEVICE DIAGNOSTIC TOOLKIT
+REMOTE DEVICE DIAGNOSTIC TOOLKIT
 # Phase 1
 #
 # Purpose
@@ -21,7 +21,7 @@
 # SCRIPT SETTINGS
 # ------------------------------------------------------------
 
-$ToolName = "HelpOne Remote Device Diagnostic Toolkit"
+$ToolName = "Remote Device Diagnostic Toolkit"
 $ToolVersion = "0.1"
 $PsExecTimeoutSeconds = 10
 $ScriptFolder = Split-Path -Parent $MyInvocation.MyCommand.Path
@@ -43,7 +43,7 @@ function Show-ToolHeader
 
     Write-Host ""
     Write-Host "============================================================" -ForegroundColor Cyan
-    Write-Host " HELPONE REMOTE DEVICE DIAGNOSTIC TOOLKIT" -ForegroundColor Cyan
+    Write-Host " REMOTE DEVICE DIAGNOSTIC TOOLKIT" -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host ""
 
@@ -450,5 +450,5 @@ while ($ExitToolkit -eq $false)
 
 Clear-Host
 Write-Host ""
-Write-Host "HelpOne Remote Device Diagnostic Toolkit closed." -ForegroundColor Cyan
+Write-Host "Remote Device Diagnostic Toolkit closed." -ForegroundColor Cyan
 Write-Host ""
